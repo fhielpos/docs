@@ -3,12 +3,16 @@ COMPANY=giantswarm
 registry=registry.giantswarm.io
 
 
-default: docker-build
+build:
+	echo 'Nothing to build for docs'
 
 build-css:
 	sass swarmdocs/static/css/base.scss swarmdocs/static/css/base.css
 
-docker-build:
+clean:
+	echo 'clean blog'
+
+build-docker:
 	#
 	# clean
 	rm -rf swarmdocs/public/*
@@ -42,11 +46,6 @@ swarm-update:
 	SWARM_CLUSTER_ID=leaseweb-alpha-private.giantswarm.io swarm --env="giantswarm/production" update docs/content-master
 	sleep 120
 	SWARM_CLUSTER_ID=leaseweb-alpha-private.giantswarm.io swarm --env="giantswarm/production" update docs/content-slave
-
-clean:
-	docker stop $(PROJECT)
-	docker rm $(PROJECT)
-	docker rmi $(registry)/$(COMPANY)/$(PROJECT)
 
 linkcheck:
 	linklint -http -host docker.dev -limit 1000 -doc linklinttest /@
