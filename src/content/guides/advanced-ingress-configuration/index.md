@@ -364,6 +364,16 @@ __Warning:__ We also allow setting `use-proxy-protocol: "true"/"false"`. This se
 
 On cluster creation the ConfigMap is empty and above defaults will be applied to the final Ingress Controller deployment. To override any of the above values, you just need to add the respective line in the data field of the user ConfigMap.
 
+
+## Ingress Validation 
+
+Starting from Nginx Ingress Controller `0.25.0` version, the component offers the option to validate ingresses resources, ensuring the controller will generate a valid configuration. Once it is enabled, the deployment contains a [Validation Admission Controller](https://kubernetes.io/docs/reference/access-authn-authz/admission-controllers/#validatingadmissionwebhook) which verifies the schema of the resources. In order to enable in your tenant clusters you need to add the flag `validation_hook_enable` equal to `true`.
+
+```yaml
+data:
+  validation_hook_enable: "true"
+```
+
 ## Default certificate
 
 When you want to have the default server on the nginx controller support TLS you need to provide a certificate. This is configured using the flag `--default-ssl-certificate`. Now you can provide this value in the `user-value` configmap to force the component to be restarted with the provided certificate. The value of the property should be the namespace and secret name which holds the certificate content.
