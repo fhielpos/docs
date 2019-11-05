@@ -8,6 +8,8 @@ default: docker-build
 build-css:
 	docker run -it \
 		-v ${PWD}/src/static/css:/sass \
+		-v ${PWD}/src/static/js:/js \
+		-v ${PWD}/src/static/img:/img \
 		ellerbrock/alpine-sass /sass/base.sass /sass/base.css -m auto
 
 vendor:
