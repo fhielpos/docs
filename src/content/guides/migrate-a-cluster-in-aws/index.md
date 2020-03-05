@@ -17,7 +17,7 @@ Giant Swarm most of the times offers upgrades in-place so customers don't need t
 
 A good first step for a migration is a elaborate a detailed plan. As the scope of a migration can be quite huge, the best idea is to break down the operation in multiple steps. Taking first a small non critical service, that could comprehend multiple interconnected components, and moving it to the new cluster will be easier and give us confidence on the entire goal. 
 
-There are some considerations to make when we are selecting a service for the migration. We must to think and answer questions like "Has the selected service got any dependency within the same cluster or external service? (like it needs to talk to an internal API)", "Is there any requisite needed to properly run the service in the newer cluster? (like it must run on a specific hardware)", "Is there any change or incompatibility in the newer cluster that can prevent the application to run correctly? (new API schema for a Kubernetes resource that may impact on the service)", ... Beyond these considerations, I would like to encourage at this point take advantage of an enhancement or feature offered in the new cluster stack (small steps, small failures). 
+There are some considerations to make when we are selecting a service for the migration. We must to think and answer questions like "Has the selected service got any dependency within the same cluster or external service? (like it needs to talk to an internal API)", "Is there any requisite needed to properly run the service in the newer cluster? (like it must run on a specific hardware)", "Is there any change or incompatibility in the newer cluster that can prevent the application to run correctly? (new API schema for a Kubernetes resource that may impact on the service)", ... Beyond these considerations, we would like to encourage you at this point to don't take the opportunity to retake advantage of an enhancement or feature offered in the new cluster stack (small steps, small failures). 
 
 ## Alternatives
 
@@ -154,17 +154,51 @@ It has an advantage over `clusterOverrides` property as it always ensure the num
 
 ## Continuous Delivery Platform
 
-In an ideal scenario, having a proper continuous delivery system makes the cluster migration as easy as falling off a log. What it means? well having a well architected application ((12 factor application manifesto)[https://12factor.net/]) and a system that let us perform a granular releases of our applications reduce the number of steps or considerations to carry out the migration. 
+In an ideal scenario, having a proper continuous delivery system makes the cluster migration as easy as falling off a log. What it means? well having a well architected application ((12 factor application manifesto)[https://12factor.net/]) and a system that let us perform granular releases of our applications reduce the number of steps or considerations to carry out the migration. 
 
-Here we are taking Argo CD as our delivery system, but there are a list of [different tools you could used instead](https://landscape.cncf.io/category=continuous-integration-delivery&format=card-mode).
+Here we have chosen Argo CD as our delivery system, but there are a list of [different tools you could used instead](https://landscape.cncf.io/category=continuous-integration-delivery&format=card-mode).
+
+Argo CD follows the principles of GitOps, which manages the Kubernetes applications as code. There are three main concepts to have in mind: repositories, clusters and applications/projects. As GitOps explain our repository will rule the state of the application in the cluster, so a new commit in our branch will trigger a change on the cluster state. The `repository` will hold the information of the Git repository where the application manifests will leave. The `cluster` configuration will allow Argo to sync and perform changes in the target cluster. And finally, the `project` concept helps us to group applications by area, allowing us to select which repositories, clusters or permissions they will have access.
+
+In order to use Argo for migrating our applications we will need to tweak its behavior. The application and cluster relation is one to one, so [we cannot release the same application in two different clusters](https://github.com/argoproj/argo-cd/issues/1673).  But we could create the same application with two different cluster destinations. Let's follow an example.
+
+
+Installing Argo is pretty straightforward
+```bash
+
+```
+
+
+In this example we are leveraging in an operation cluster to control the migration of our source cluster to a target cluster. For that we need to register both clusters in the ops cluster:
+
+Adding cluster
+```bash
+argocd cluster add <source_cluster>
+argocd cluster add <target_cluster>
+```
+
+First, we create an application:
+
+Second, we create
+
+```bash
+argocd app create guestbook --repo  <MY APPLICATION REPO> --path <KUBERNETES MANIFESTS FOLDER> --dest-server <CLUSTER_API> --dest-namespace default
+```
+
+
+Second, we use a copy of our application for the destination cluster:
+
+```bash
+argocd app create guestbook --repo  <MY APPLICATION REPO> --path <KUBERNETES MANIFESTS FOLDER> --dest-server <CLUSTER_API> --dest-namespace default
+```
 
 
 ### Checklist before an upgrade
 
 - Is your environment configuration properly set up?
-  Since your app must read the environment specific configuraiton during deployment you need to be sure the new environment has properly configured it. 
+  Since your app must read the environment specific configuration during deployment you need to be sure the new environment has properly configured it. 
 
-- Are all the backend services accesible from the new cluster? 
+- Are all the backend services accessible from the new cluster? 
   Sometimes some of the thridparty or dependend services are internal an only accessible within the Virtual Private CLuster or Resource Group. Ensure you prepared your new cluster infrastructure (VPC peering, VPN, DNS, ...) to avoid unexpected issues.
 
 - Do you have deployment system that can redirect the traffic granularly to new destiny?
